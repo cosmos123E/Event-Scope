@@ -328,8 +328,8 @@ fun Search(navController: NavHostController) {
                                     .size(150.dp)
                             )
 
-                            item.name?.let { Text(text = it) }
-                            item.description?.let { Text(text = it) }
+                            item.name.let { Text(text = it) }
+                            item.description.let { Text(text = it) }
                         }
                     }
                 }

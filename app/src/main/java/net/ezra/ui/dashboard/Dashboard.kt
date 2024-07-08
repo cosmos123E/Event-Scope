@@ -38,8 +38,8 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
@@ -94,8 +94,7 @@ import net.ezra.ui.products.Event
 
 val myCustomFontFamily = FontFamily(
     Font(R.font.poppins_black, FontWeight.Normal),
-//    Font(R.font.poppins_italic, FontWeight.Bold),
-//    Font(R.font.poppins_extra_bold, FontWeight.Normal, FontStyle.Italic)
+
 )
 
 
@@ -396,7 +395,7 @@ fun DashboardScreen(navController: NavHostController)  {
 
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.ArrowForward,
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                             contentDescription = null,
                                             tint = Color.Black
                                         )
@@ -536,50 +535,6 @@ fun DashboardScreen(navController: NavHostController)  {
 
 
 
-////                            Dashboard starts here
-//
-//                            val dashboardItems = listOf(
-//                                DashboardItemData(
-//                                    title = "Profile",
-//                                    icon = Icons.Default.AccountCircle,
-//                                    badgeCount = 0,
-//                                    onClick = {
-//                                        navController.navigate(ROUTE_MYPROFILE)
-//                                        // Navigate to profile screen
-//                                    }
-//                                ),
-//                                DashboardItemData(
-//                                    title = "Settings",
-//                                    icon = Icons.Default.Settings,
-//                                    badgeCount = 3,
-//                                    onClick = {
-//                                        // Navigate to settings screen
-//                                    }
-//                                ),
-//                                DashboardItemData(
-//                                    title = "Events",
-//                                    icon = Icons.Default.Person,
-//                                    badgeCount = 4,
-//                                    onClick = {
-//                                        navController.navigate(ROUTE_VIEW_PROD)
-//                                        // Navigate to messages screen
-//                                    }
-//                                ),
-//                                // Add more dashboard items as needed
-//                            )
-//
-//
-//                            LazyVerticalGrid(
-//                                columns = GridCells.Fixed(2),
-//                                modifier = Modifier.padding(16.dp)
-//                            ) {
-//                                items(dashboardItems) { item ->
-//                                    DashboardItem(item)
-//                                }
-//                            }
-
-
-//                            Dashboard ends here
 
 
                         }
@@ -690,8 +645,10 @@ fun AnimatedDrawer(isOpen: Boolean, navController: NavHostController, onClose: (
                                     )
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Button(onClick = { navController.navigate(ROUTE_DASHBOARD) },
-                                    colors = ButtonDefaults.buttonColors(Color(0xff3a7ca5))) {
+                                Button(
+                                    onClick = { navController.navigate(ROUTE_DASHBOARD) },
+                                    colors = ButtonDefaults.buttonColors(Color(0xff3a7ca5))
+                                ) {
                                     Text(
                                         "Close",
                                         style = TextStyle(
@@ -731,8 +688,6 @@ fun AnimatedDrawer(isOpen: Boolean, navController: NavHostController, onClose: (
 
                 )
         }
-
-
     }
 }
 
@@ -791,28 +746,8 @@ fun BottomBar(navController: NavController) {
             onClick = {
                 navController.navigate(ROUTE_VIEW_PROD)
 
-            })
-
-//        BottomNavigationItem(icon = {
-//            Icon(imageVector = Icons.Default.Search, "", tint = Color.White)
-//        },
-//            label = {
-//                Text(
-//                    text = "Search",
-//                    style = TextStyle(
-//                        fontFamily = AboutFont,
-//                        color = Color.White
-//                    )
-//                )
-//
-//            },
-//            selected = (selectedIndex.value == 2),
-//            onClick = {
-//
-//                navController.navigate(ROUTE_SEARCH)
-//
-//
-//            })
+            }
+        )
 
 
     }
@@ -836,7 +771,7 @@ fun EventCard(eventId: String) {
 
 
     LaunchedEffect(eventId) {
-            event = net.ezra.ui.dashboard.fetchEvent(eventId)
+            event = fetchEvent(eventId)
     }
 
     if (event != null) {
@@ -892,90 +827,6 @@ fun EventCard(eventId: String) {
     }
 }
 
-@Composable
-fun MainScreen(eventIds: List<String>) {
-    Column {
-        eventIds.forEach { eventId ->
-            EventCard(eventId = eventId)
-        }
-    }
-}
-
-@Composable
-fun MainContent() {
-    val eventIds = listOf("1", "2", "3", "4") // Replace with your actual event IDs
-    MainScreen(eventIds = eventIds)
-}
-
-
-
-
-
-
-
-
-
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun DashboardItem(item: DashboardItemData) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(8.dp),
-        elevation = 8.dp,
-        backgroundColor = Color.White,
-        onClick = item.onClick
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = "Dashboard Icon",
-                tint = Color.Black,
-                modifier = Modifier.size(36.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.subtitle1,
-                color = Color.Black
-            )
-            // Add a badge if the badge count is greater than 0
-            if (item.badgeCount > 0) {
-                Badge(count = item.badgeCount)
-            }
-        }
-    }
-}
-@Composable
-fun Badge(count: Int) {
-    Box(
-        modifier = Modifier
-            .padding(start = 8.dp)
-            .size(20.dp)
-            .clip(CircleShape)
-            .background(Color.Red),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.caption,
-            color = Color.White
-        )
-    }
-}
-data class DashboardItemData(
-    val title: String,
-    val icon: ImageVector,
-    val badgeCount: Int,
-    val onClick: () -> Unit
-)
 data class User(
     val userId: String = "",
     val school: String = "",

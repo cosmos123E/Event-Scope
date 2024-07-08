@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.rememberImagePainter
+import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -108,7 +108,7 @@ fun AddEventScreen(navController: NavController, onEventAdded: () -> Unit) {
                     if (EventImageUri != null) {
                         // Display selected image
                         Image(
-                            painter = rememberImagePainter(EventImageUri), // Using rememberImagePainter with Uri
+                            painter = rememberAsyncImagePainter(EventImageUri), // Using rememberImagePainter with Uri
                             contentDescription = null,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -141,7 +141,7 @@ fun AddEventScreen(navController: NavController, onEventAdded: () -> Unit) {
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
-//                            fontFamily = Font(R.font.poppins_black)
+
                         )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -191,9 +191,7 @@ fun AddEventScreen(navController: NavController, onEventAdded: () -> Unit) {
 
                             )
                         },
-//                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-//                        keyboardActions = KeyboardActions(onDone = { /* Handle Done action */ }),
-                        modifier = Modifier.fillMaxWidth()
+                       modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -244,7 +242,7 @@ fun AddEventScreen(navController: NavController, onEventAdded: () -> Unit) {
                                     Eventlocation,
                                     EventImageUri
                                 )
-//                                navController.navigate(ROUTE_VIEW_PROD)
+
 
                             }
 

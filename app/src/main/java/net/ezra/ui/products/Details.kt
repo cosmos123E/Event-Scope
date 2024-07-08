@@ -51,7 +51,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import net.ezra.navigation.ROUTE_VIEW_PROD
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await

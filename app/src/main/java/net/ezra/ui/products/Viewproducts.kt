@@ -33,7 +33,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -51,7 +50,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.rememberImagePainter
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
@@ -64,6 +62,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
+import coil.compose.rememberAsyncImagePainter
 import net.ezra.navigation.ROUTE_DASHBOARD
 import net.ezra.ui.about.AboutFont
 import net.ezra.ui.dashboard.BottomBar
@@ -217,7 +216,7 @@ fun EventListItem(event: Event, onItemClick: (String) -> Unit) {
         ) {
             // Event Image
             Image(
-                painter = rememberImagePainter(event.imageUrl),
+                painter = rememberAsyncImagePainter(event.imageUrl),
                 contentDescription = null,
 //                contentScale = ContentScale.Crop,
                 modifier = Modifier

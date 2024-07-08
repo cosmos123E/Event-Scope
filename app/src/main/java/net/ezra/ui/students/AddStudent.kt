@@ -122,10 +122,7 @@ fun AddStudents(navController: NavHostController) {
                             horizontalAlignment = Alignment.CenterHorizontally
                         ){
 
-                            Card (
-
-
-                            ){
+                            Card {
 
                             }
 

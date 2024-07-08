@@ -2,72 +2,86 @@ package net.ezra.ui.products
 
 
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import net.ezra.R
+import net.ezra.navigation.ROUTE_DASHBOARD
+import net.ezra.ui.about.AboutFont
+import net.ezra.ui.dashboard.BottomBar
 
-class ProductViewModel : ViewModel() {
+class EventViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
 
-    val productState = MutableLiveData<Product>()
+    val eventState = MutableLiveData<Event>()
 
-    fun getProduct(productId: String) {
+    fun getEvent(eventId: String) {
         viewModelScope.launch {
-            val document = firestore.collection("products").document(productId).get().await()
-            val product = document.toObject(Product::class.java) ?: return@launch
-            productState.value = product
+            val document = firestore.collection("events").document(eventId).get().await()
+            val event = document.toObject(Event::class.java) ?: return@launch
+            eventState.value = event
         }
     }
 
-    fun updateProduct(product: Product) {
-        firestore.collection("products").document(product.id).set(product)
+    fun updateEvent(event: Event) {
+        firestore.collection("events").document(event.id).set(event)
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun UpdateProductScreen(navController: NavController, productId: String, productViewModel: ProductViewModel) {
+fun UpdateEventScreen(navController: NavController, eventId: String, eventViewModel: EventViewModel) {
 
-    var updatedProductName by remember { mutableStateOf("") }
-    var updatedProductDescription by remember { mutableStateOf("") }
-    var updatedProductPrice by remember { mutableStateOf("") }
-    var updatedProductImageUri by remember { mutableStateOf<Uri?>(null) }
+    var updatedEventName by remember { mutableStateOf("") }
+    var updatedEventDescription by remember { mutableStateOf("") }
+    var updatedEventImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    val productState by productViewModel.productState.observeAsState()
+    val EventState by eventViewModel.eventState.observeAsState()
 
-    val product = productState ?: Product()
+    val event = EventState ?: Event()
 
-    updatedProductName = product.name
-    updatedProductDescription = product.description
-    updatedProductPrice = product.price.toString()
-    updatedProductImageUri = Uri.parse(product.imageUrl)
+    updatedEventName = event.name
+    updatedEventDescription = event.description
+    updatedEventImageUri = Uri.parse(event.imageUrl)
 
     val storage = FirebaseStorage.getInstance()
-    fun uploadImageToStorage(productId: String, imageUri: Uri?, onSuccess: (String) -> Unit) {
+    fun uploadImageToStorage(eventId: String, imageUri: Uri?, onSuccess: (String) -> Unit) {
         if (imageUri != null) {
-            val storageRef = storage.reference.child("product_images").child("$productId.jpg")
+            val storageRef = storage.reference.child("event_images").child("$eventId.jpg")
             val uploadTask = storageRef.putFile(imageUri)
             uploadTask.addOnSuccessListener { taskSnapshot ->
                 storageRef.downloadUrl.addOnSuccessListener { uri ->
@@ -78,69 +92,133 @@ fun UpdateProductScreen(navController: NavController, productId: String, product
     }
 
     val context = LocalContext.current
-    val getContent = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        updatedProductImageUri = uri
-    }
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(text = "Edit Product", style = MaterialTheme.typography.h6)
-        Spacer(modifier = Modifier.height(16.dp))
-        updatedProductImageUri?.let { uri ->
-            Image(
-                painter = painterResource(id = R.drawable.logo), // Placeholder image
-                contentDescription = null,
-                modifier = Modifier.size(120.dp)
-            )
+    val getContent =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            updatedEventImageUri = uri
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = updatedProductName,
-            onValueChange = { updatedProductName = it },
-            label = { Text(updatedProductName.takeUnless { it.isBlank() } ?: "Product Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = updatedProductDescription,
-            onValueChange = { updatedProductDescription = it },
-            label = { Text(updatedProductDescription.takeUnless { it.isBlank() } ?: "Product Description") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = updatedProductPrice,
-            onValueChange = { updatedProductPrice = it },
-            label = { Text(updatedProductPrice.takeUnless { it.isBlank() } ?: "Product Price") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = {
-            getContent.launch("image/*")
-        }) {
-            Text("Select Image")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            val updatedProduct = Product(
-                id = productId,
-                name = updatedProductName,
-                description = updatedProductDescription,
-                price = updatedProductPrice.toDouble(),
-                imageUrl = ""
-            )
 
-            if (updatedProductImageUri != null) {
-                uploadImageToStorage(productId, updatedProductImageUri) { imageUrl ->
-                    updatedProduct.imageUrl = imageUrl
-                    productViewModel.updateProduct(updatedProduct)
-                    navController.popBackStack()
+    Scaffold(
+
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Edit Event",
+                        style = TextStyle(
+                            fontFamily = AboutFont,
+                            fontSize = 20.sp
+                        )
+                    )
+
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+
+
+                        navController.navigate(ROUTE_DASHBOARD)
+
+
+                    }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, "backIcon",
+                            tint = Color.White
+                        )
+                    }
+                },
+
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xff3a7ca5),
+                    titleContentColor = Color.White,
+
+                    )
+            )
+        }, content = {
+
+
+            Column(modifier = Modifier.padding(16.dp)) {
+//                Text(text = "Edit Event", style = MaterialTheme.typography.h6)
+                Spacer(modifier = Modifier.height(16.dp))
+                updatedEventImageUri?.let { uri ->
+                    Image(
+                        painter = painterResource(id = R.drawable.small), // Placeholder image
+                        contentDescription = null,
+                        modifier = Modifier.size(120.dp)
+                    )
                 }
-            } else {
-                productViewModel.updateProduct(updatedProduct)
-                navController.popBackStack()
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = updatedEventName,
+                    onValueChange = { updatedEventName = it },
+                    label = { Text(updatedEventName.takeUnless { it.isBlank() } ?: "Event Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = updatedEventDescription,
+                    onValueChange = { updatedEventDescription = it },
+                    label = {
+                        Text(updatedEventDescription.takeUnless { it.isBlank() }
+                            ?: "Event Description")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        getContent.launch("image/*")
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = Color(0xff3a7ca5)
+                    )
+                ) {
+                    Text(
+                        "Select Image",
+                        style = TextStyle(
+                            fontFamily = AboutFont
+                        )
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        val updatedEvent = Event(
+                            id = eventId,
+                            name = updatedEventName,
+                            description = updatedEventDescription,
+                            imageUrl = ""
+                        )
+
+                        if (updatedEventImageUri != null) {
+                            uploadImageToStorage(eventId, updatedEventImageUri) { imageUrl ->
+                                updatedEvent.imageUrl = imageUrl
+                                eventViewModel.updateEvent(updatedEvent)
+                                navController.popBackStack()
+                            }
+                        } else {
+                            eventViewModel.updateEvent(updatedEvent)
+                            navController.popBackStack()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = Color(0xff3a7ca5)
+                    ),
+                    modifier = Modifier.align(Alignment.End)
+                )
+
+                {
+                    Text(
+                        "Save",
+                        style = TextStyle(
+                            fontFamily = AboutFont
+                        )
+                    )
+                }
             }
-        }, modifier = Modifier.align(Alignment.End)) {
-            Text("Save")
-        }
-    }
+
+        },
+
+
+        bottomBar = { BottomBar(navController = navController) }
+    )
 }

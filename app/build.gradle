@@ -12,7 +12,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "net.coding"
+        applicationId "Event.Scope"
         minSdk 21
         targetSdk 34
         versionCode 1
@@ -86,6 +86,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-database:20.3.1'
     implementation 'com.google.firebase:firebase-storage-ktx:20.3.0'
     implementation 'com.google.firebase:firebase-auth-ktx:22.0.0'
+    implementation 'androidx.benchmark:benchmark-common:1.2.4'
 
     kapt "com.google.dagger:hilt-android-compiler:2.42"
 

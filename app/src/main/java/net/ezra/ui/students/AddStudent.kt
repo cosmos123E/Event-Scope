@@ -80,7 +80,7 @@ fun AddStudents(navController: NavHostController) {
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = stringResource(id = R.string.add_stud))
+                    Text(text = stringResource(id = R.string.add_event))
                 },
                 navigationIcon = {
                     IconButton(onClick = {

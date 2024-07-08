@@ -7,54 +7,65 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import kotlinx.coroutines.tasks.await
-import net.ezra.navigation.ROUTE_ADD_PRODUCT
+import net.ezra.R
+import net.ezra.navigation.ROUTE_DASHBOARD
 import net.ezra.navigation.ROUTE_HOME
+import net.ezra.navigation.ROUTE_SEARCH
 import net.ezra.navigation.ROUTE_VIEW_PROD
+import net.ezra.ui.about.AboutFont
+import net.ezra.ui.dashboard.BottomBar
 import java.util.*
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProductScreen(navController: NavController, onProductAdded: () -> Unit) {
-    var productName by remember { mutableStateOf("") }
-    var productDescription by remember { mutableStateOf("") }
-    var productPrice by remember { mutableStateOf("") }
-    var productImageUri by remember { mutableStateOf<Uri?>(null) }
+fun AddEventScreen(navController: NavController, onEventAdded: () -> Unit) {
+    var EventName by remember { mutableStateOf("") }
+    var EventDescription by remember { mutableStateOf("") }
+    var Eventlocation by remember { mutableStateOf("") }
+    var EventDuration by remember { mutableStateOf("") }
+    var EventTime by remember { mutableStateOf("") }
+    var EventImageUri by remember { mutableStateOf<Uri?>(null) }
+
 
     // Track if fields are empty
-    var productNameError by remember { mutableStateOf(false) }
-    var productDescriptionError by remember { mutableStateOf(false) }
-    var productPriceError by remember { mutableStateOf(false) }
-    var productImageError by remember { mutableStateOf(false) }
+    var EventNameError by remember { mutableStateOf(false) }
+    var EventDescriptionError by remember { mutableStateOf(false) }
+    var EventlocationError by remember { mutableStateOf(false) }
+    var EventDurationError by remember { mutableStateOf(false) }
+    var EventTimeError by remember { mutableStateOf(false) }
+    var EventImageError by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            productImageUri = it
+            EventImageUri = it
         }
     }
 
@@ -62,7 +73,13 @@ fun AddProductScreen(navController: NavController, onProductAdded: () -> Unit) {
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = "Add Products", fontSize = 30.sp, color = Color.White)
+                    Text(text = "Add Events",
+                        style = TextStyle(
+                            fontFamily = AboutFont,
+                            fontSize = 30.sp,
+                            color = Color.White
+                        )
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -76,7 +93,7 @@ fun AddProductScreen(navController: NavController, onProductAdded: () -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xff0FB06A),
+                    containerColor = Color(0xff3A7CA5),
                     titleContentColor = Color.White,
                 )
             )
@@ -85,13 +102,13 @@ fun AddProductScreen(navController: NavController, onProductAdded: () -> Unit) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xff9AEDC9))
+                    .background(Color(0xff87ceeb))
             ) {
                 item {
-                    if (productImageUri != null) {
+                    if (EventImageUri != null) {
                         // Display selected image
                         Image(
-                            painter = rememberImagePainter(productImageUri), // Using rememberImagePainter with Uri
+                            painter = rememberImagePainter(EventImageUri), // Using rememberImagePainter with Uri
                             contentDescription = null,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -105,117 +122,188 @@ fun AddProductScreen(navController: NavController, onProductAdded: () -> Unit) {
                                 .height(200.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("No Image Selected", modifier = Modifier.padding(8.dp))
+                            Text("No Image Selected",
+                                style = TextStyle(
+                                    fontFamily = AboutFont)
+                                ,modifier = Modifier.padding(8.dp))
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { launcher.launch("image/*") }) {
-                        Text("Select Image")
+                    OutlinedButton(
+                        onClick = { launcher.launch("image/*") },
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            backgroundColor = Color(0xff3A7CA5)
+                        ),
+                    ) {
+                        Text("Select Image",
+                            style = TextStyle(
+                                fontFamily = AboutFont,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+//                            fontFamily = Font(R.font.poppins_black)
+                        )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    TextField(
-                        value = productName,
-                        onValueChange = { productName = it },
-                        label = { Text("Product Name") },
+                    OutlinedTextField(
+                        value = EventName,
+                        onValueChange = { EventName = it },
+                        label = {
+                            Text(
+                                "Event Name",
+                                style = TextStyle(
+                                    fontFamily = AboutFont,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White)
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
-                        value = productDescription,
-                        onValueChange = { productDescription = it },
-                        label = { Text("Product Description") },
+                    OutlinedTextField(
+                        value = EventDescription,
+                        onValueChange = { EventDescription = it },
+                        label = {
+                            Text(
+                                "Event Description",
+                                style = TextStyle(
+                                    fontFamily = AboutFont,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White)
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextField(
-                        value = productPrice,
-                        onValueChange = { productPrice = it },
-                        label = { Text("Product Price") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        keyboardActions = KeyboardActions(onDone = { /* Handle Done action */ }),
+                    OutlinedTextField(
+                        value = Eventlocation,
+                        onValueChange = { Eventlocation = it },
+                        label = {
+                            Text(
+                                "Location of the Event",
+                                style = TextStyle(
+                                    fontFamily = AboutFont,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White),
+                                modifier = Modifier
+
+
+
+                            )
+                        },
+//                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+//                        keyboardActions = KeyboardActions(onDone = { /* Handle Done action */ }),
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (productNameError) {
-                        Text("Product Name is required", color = Color.Red)
+                    if (EventNameError) {
+                        Text("Event Name is required",
+                            style = TextStyle(
+                                fontFamily = AboutFont,
+                                color = Color.Red)
+                        )
                     }
-                    if (productDescriptionError) {
-                        Text("Product Description is required", color = Color.Red)
+                    if (EventDescriptionError) {
+                        Text("Event Description is required",
+                            style = TextStyle(
+                                fontFamily = AboutFont,
+                                color = Color.Red)
+                        )
                     }
-                    if (productPriceError) {
-                        Text("Product Price is required", color = Color.Red)
+                    if (EventlocationError) {
+                        Text("Event location is required",
+                            style = TextStyle(
+                                fontFamily = AboutFont,color = Color.Red)
+                        )
                     }
-                    if (productImageError) {
-                        Text("Product Image is required", color = Color.Red)
+                    if (EventImageError) {
+                        Text("Event Image is required",
+                            style = TextStyle(
+                                fontFamily = AboutFont,
+                                color = Color.Red)
+                        )
                     }
 
                     // Button to add product
-                    Button(
+                    OutlinedButton(
                         onClick = {
                             // Reset error flags
-                            productNameError = productName.isBlank()
-                            productDescriptionError = productDescription.isBlank()
-                            productPriceError = productPrice.isBlank()
-                            productImageError = productImageUri == null
+                            EventNameError = EventName.isBlank()
+                            EventDescriptionError = EventDescription.isBlank()
+                            EventlocationError = Eventlocation.isBlank()
+                            EventImageError = EventImageUri == null
 
                             // Add product if all fields are filled
-                            if (!productNameError && !productDescriptionError && !productPriceError && !productImageError) {
-                                addProductToFirestore(
+                            if (!EventNameError && !EventDescriptionError && !EventlocationError && !EventImageError) {
+                                addEventToFirestore(
                                     navController,
-                                    onProductAdded,
-                                    productName,
-                                    productDescription,
-                                    productPrice.toDouble(),
-                                    productImageUri
+                                    onEventAdded,
+                                    EventName,
+                                    EventDescription,
+                                    Eventlocation,
+                                    EventImageUri
                                 )
+//                                navController.navigate(ROUTE_VIEW_PROD)
+
                             }
+
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            backgroundColor = Color(0xff3A7CA5)
+                        )
+
                     ) {
-                        Text("Add Product")
+                        Text("Add Event",
+                            style = TextStyle(
+                                fontFamily = AboutFont,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White)
+
+                        )
                     }
                 }
             }
-        }
+        },
+        bottomBar ={BottomBar(navController = navController)}
     )
 }
 
-private fun addProductToFirestore(navController: NavController, onProductAdded: () -> Unit, productName: String, productDescription: String, productPrice: Double, productImageUri: Uri?) {
-    if (productName.isEmpty() || productDescription.isEmpty() || productPrice.isNaN() || productImageUri == null) {
+private fun addEventToFirestore(navController: NavController, onEventAdded: () -> Unit, EventName: String, EventDescription: String, Eventlocation: String, EventImageUri: Uri?) {
+    if (EventName.isEmpty() || EventDescription.isEmpty() || Eventlocation.isEmpty() || EventImageUri == null) {
         // Validate input fields
         return
     }
-
-    val productId = UUID.randomUUID().toString()
+    val eventId = UUID.randomUUID().toString()
 
     val firestore = Firebase.firestore
-    val productData = hashMapOf(
-        "name" to productName,
-        "description" to productDescription,
-        "price" to productPrice,
+    val eventData = hashMapOf(
+        "name" to EventName,
+        "description" to EventDescription,
+        "location" to Eventlocation,
         "imageUrl" to ""
     )
 
-    firestore.collection("products").document(productId)
-        .set(productData)
+    firestore.collection("events").document(eventId)
+        .set(eventData)
         .addOnSuccessListener {
-            uploadImageToStorage(productId, productImageUri) { imageUrl ->
-                firestore.collection("products").document(productId)
+            uploadImageToStorage(eventId, EventImageUri) { imageUrl ->
+                firestore.collection("events").document(eventId)
                     .update("imageUrl", imageUrl)
                     .addOnSuccessListener {
                         // Display toast message
                         Toast.makeText(
                             navController.context,
-                            "Product added successfully!",
+                            "Event added successfully!",
                             Toast.LENGTH_SHORT
                         ).show()
 
                         // Navigate to another screen
-                        navController.navigate(ROUTE_HOME)
+                        navController.navigate(ROUTE_VIEW_PROD)
 
                         // Invoke the onProductAdded callback
-                        onProductAdded()
+                        onEventAdded()
                     }
                     .addOnFailureListener { e ->
                         // Handle error updating product document
@@ -227,14 +315,14 @@ private fun addProductToFirestore(navController: NavController, onProductAdded: 
         }
 }
 
-private fun uploadImageToStorage(productId: String, imageUri: Uri?, onSuccess: (String) -> Unit) {
+private fun uploadImageToStorage(eventId: String, imageUri: Uri?, onSuccess: (String) -> Unit) {
     if (imageUri == null) {
         onSuccess("")
         return
     }
 
     val storageRef = Firebase.storage.reference
-    val imagesRef = storageRef.child("products/$productId.jpg")
+    val imagesRef = storageRef.child("events/$eventId.jpg")
 
     imagesRef.putFile(imageUri)
         .addOnSuccessListener { taskSnapshot ->
@@ -250,3 +338,6 @@ private fun uploadImageToStorage(productId: String, imageUri: Uri?, onSuccess: (
             // Handle failure to upload image
         }
 }
+
+
+

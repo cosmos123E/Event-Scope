@@ -1,6 +1,8 @@
 package net.ezra.ui.products
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,6 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,13 +60,21 @@ import net.ezra.navigation.ROUTE_HOME
 import net.ezra.navigation.ROUTE_VIEW_PROD
 import net.ezra.navigation.ROUTE_VIEW_STUDENTS
 import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
+import net.ezra.navigation.ROUTE_DASHBOARD
+import net.ezra.ui.about.AboutFont
+import net.ezra.ui.dashboard.BottomBar
+import net.ezra.ui.dashboard.myCustomFontFamily
 
-data class Product(
+data class Event(
     var id: String = "",
     val name: String = "",
     val description: String ="",
-    val price: Double = 0.0,
-    var imageUrl: String = ""
+    var imageUrl: String = "",
+    val location : String = ""
 )
 
 
@@ -70,15 +82,16 @@ data class Product(
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductListScreen(navController: NavController, products: List<Product>) {
+fun EventListScreen(navController: NavController, events: List<Event>) {
     var isLoading by remember { mutableStateOf(true) }
-    var productList by remember { mutableStateOf(emptyList<Product>()) }
-    var displayedProductCount by remember { mutableStateOf(1) }
+    var eventList by remember { mutableStateOf(emptyList<Event>()) }
+    var displayedEventCount by remember { mutableStateOf(1) }
     var progress by remember { mutableStateOf(0) }
 
+
     LaunchedEffect(Unit) {
-        fetchProducts { fetchedProducts ->
-            productList = fetchedProducts
+        fetchEvents { fetchedEvents ->
+            eventList = fetchedEvents
             isLoading = false
         }
     }
@@ -87,11 +100,16 @@ fun ProductListScreen(navController: NavController, products: List<Product>) {
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(text = "Products",fontSize = 30.sp, color = Color.White)
+                    Text(text = "Events",
+                        style = TextStyle(
+                            fontSize = 30.sp,
+                            fontFamily = myCustomFontFamily,
+                        )
+                        , color = Color.White)
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        navController.navigate(ROUTE_HOME)
+                        navController.navigate(ROUTE_DASHBOARD)
                     }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
@@ -102,7 +120,7 @@ fun ProductListScreen(navController: NavController, products: List<Product>) {
                 },
 
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xff0FB06A),
+                    containerColor = Color(0xff3A7CA5),
                     titleContentColor = Color.White,
 
                     )
@@ -113,7 +131,7 @@ fun ProductListScreen(navController: NavController, products: List<Product>) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xff9AEDC9))
+                    .background(Color(0xffffffff))
             ) {
                 if (isLoading) {
                     // Progress indicator
@@ -122,86 +140,173 @@ fun ProductListScreen(navController: NavController, products: List<Product>) {
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(progress = progress / 100f)
-                        Text(text = "Loading... $progress%", fontSize = 20.sp)
+                        Text(text = "Loading... $progress%", 
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                fontFamily = AboutFont,
+                                
+                            ),
+                            )
                     }
                 } else {
-                    if (productList.isEmpty()) {
-                        // No products found
-                        Text(text = "No products found")
+                    if (eventList.isEmpty()) {
+                        // No events found
+                        Text(text = "No events found",
+                            style = TextStyle(
+                                fontSize = 20.sp,
+                                fontFamily = AboutFont,
+                                )
+                        )
                     } else {
-                        // Products list
-                        LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-                            items(productList.take(displayedProductCount)) { product ->
-                                ProductListItem(product) {
-                                    navController.navigate("productDetail/${product.id}")
+                        // Events list
+                        LazyVerticalGrid(columns = GridCells.Fixed(1)) {
+                            items(eventList.take(displayedEventCount)) { event ->
+                                EventListItem(event) {
+                                    navController.navigate("eventDetail/${event.id}")
                                 }
                             }
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         // Load More Button
-                        if (displayedProductCount < productList.size) {
+                        if (displayedEventCount < eventList.size) {
                             Button(
-                                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xff0FB06A)),
-                                onClick = { displayedProductCount += 1 },
+                                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xff3A7CA5)),
+                                onClick = { displayedEventCount += 8},
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             ) {
-                                Text(text = "Load More")
+                                Text(text = "Load More",
+                                    style = TextStyle(
+                                        fontSize = 20.sp,
+                                        fontFamily = AboutFont,
+                                        color = Color.White
+                                    )
+
+                                )
                             }
                         }
                     }
                 }
             }
-        }
+        },
+        bottomBar = {BottomBar(navController = navController)}
     )
 }
 
 @Composable
-fun ProductListItem(product: Product, onItemClick: (String) -> Unit) {
+fun EventListItem(event: Event, onItemClick: (String) -> Unit) {
+    var isClicked by remember { mutableStateOf(false) }
+
+    // Animated color transition
+    val iconColor by animateColorAsState(
+        targetValue = if (isClicked) Color.Red else Color(0xff87ceeb)
+    )
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(350.dp)
             .padding(8.dp)
-            .clickable { onItemClick(product.id) }
+            .clickable { onItemClick(event.id) },
+        border = BorderStroke(2.dp, Color(0xff87ceeb))
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(16.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize()
         ) {
-            // Product Image
+            // Event Image
             Image(
-                painter = rememberImagePainter(product.imageUrl),
+                painter = rememberImagePainter(event.imageUrl),
                 contentDescription = null,
+//                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(60.dp)
+                    .fillMaxHeight()
+//                    .aspectRatio(6f/2f)
+
             )
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Product Details
-            Column {
-                Text(text = product.name)
-                Text(text = "Price: ${product.price}")
+            // Event Details
+            Column (
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(16.dp)
+
+            ){
+
+
+                Row {
+
+                    Text(
+                        text = "Details",
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = myCustomFontFamily
+                        ),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    IconButton(onClick = {
+                        isClicked = !isClicked}
+                    )
+                    {
+                        Icon(
+                            imageVector = if (isClicked) Icons.Default.Favorite
+                            else Icons.Default.FavoriteBorder,
+                            contentDescription =null,
+                            tint = Color(0xff87ceeb)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "Event Name",
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontFamily = myCustomFontFamily
+                    )
+                )
+
+                Text(text = event.name,
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontFamily = AboutFont)
+                )
+                Spacer(modifier = Modifier.height(5.dp))
+
+                Text(text = "Event Location",
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontFamily = myCustomFontFamily
+                    )
+                )
+                Text(text = event.location,
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontFamily = AboutFont)
+                )
             }
         }
     }
 }
 
-private suspend fun fetchProducts(onSuccess: (List<Product>) -> Unit) {
+private suspend fun fetchEvents(onSuccess: (List<Event>) -> Unit) {
     val firestore = Firebase.firestore
-    val snapshot = firestore.collection("products").get().await()
-    val productList = snapshot.documents.mapNotNull { doc ->
-        val product = doc.toObject<Product>()
-        product?.id = doc.id
-        product
+    val snapshot = firestore.collection("events").get().await()
+    val eventList = snapshot.documents.mapNotNull { doc ->
+        val event = doc.toObject<Event>()
+        event?.id = doc.id
+        event
     }
-    onSuccess(productList)
+    onSuccess(eventList)
 }
 
-suspend fun fetchProduct(productId: String, onSuccess: (Product?) -> Unit) {
+suspend fun fetchEvent(eventId: String, onSuccess: (Event?) -> Unit) {
     val firestore = Firebase.firestore
-    val docRef = firestore.collection("products").document(productId)
+    val docRef = firestore.collection("events").document(eventId)
     val snapshot = docRef.get().await()
-    val product = snapshot.toObject<Product>()
-    onSuccess(product)
+    val event = snapshot.toObject<Event>()
+    onSuccess(event)
 }
 

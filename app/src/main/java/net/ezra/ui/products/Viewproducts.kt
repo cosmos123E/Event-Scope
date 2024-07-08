@@ -85,7 +85,7 @@ data class Event(
 fun EventListScreen(navController: NavController, events: List<Event>) {
     var isLoading by remember { mutableStateOf(true) }
     var eventList by remember { mutableStateOf(emptyList<Event>()) }
-    var displayedEventCount by remember { mutableStateOf(1) }
+    var displayedEventCount by remember { mutableStateOf(20) }
     var progress by remember { mutableStateOf(0) }
 
 
@@ -140,7 +140,7 @@ fun EventListScreen(navController: NavController, events: List<Event>) {
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(progress = progress / 100f)
-                        Text(text = "Loading... $progress%", 
+                        Text(text = "Please wait... $progress%",
                             style = TextStyle(
                                 fontSize = 20.sp,
                                 fontFamily = AboutFont,
@@ -174,7 +174,7 @@ fun EventListScreen(navController: NavController, events: List<Event>) {
                                 onClick = { displayedEventCount += 8},
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             ) {
-                                Text(text = "Load More",
+                                Text(text = "More Events",
                                     style = TextStyle(
                                         fontSize = 20.sp,
                                         fontFamily = AboutFont,
